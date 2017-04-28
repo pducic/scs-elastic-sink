@@ -20,10 +20,10 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
-import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.messaging.SubscribableChannel;
+import org.springframework.cloud.stream.messaging.Sink;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,29 +32,24 @@ import java.util.Map;
  * @author Dave Syer
  *
  */
-@EnableBinding(MessagesSink.MsgsSinkChannel.class)
+@EnableBinding(Sink.class)
 public class MessagesSink {
+
+	@Value("${elastic.url}")
+	private String url;
 
 	private static Logger logger = LoggerFactory.getLogger(MessagesSink.class);
 
-	@StreamListener(MsgsSinkChannel.MSGS)
+	@StreamListener(Sink.INPUT)
 	public void insertEsDocument(String payload) {
 		try {
 			logger.info("received {}", payload);
 			Map<String, String> headers = new HashMap<>();
 			headers.put("Content-Type", "application/json");
-			HttpResponse<String> response = Unirest.post("http://p4-io-baya-1:9200/messages/message").headers(headers).body(payload).asString();
+			HttpResponse<String> response = Unirest.post(url).headers(headers).body(payload).asString();
 			logger.info("es responded with {}", response.getBody());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
-	interface MsgsSinkChannel {
-		String MSGS = "msgs";
-
-		@Input(MSGS)
-		SubscribableChannel input();
-	}
-
 }
