@@ -1,0 +1,22 @@
+server:
+  port: 8081
+spring:
+  cloud:
+    stream:
+      kafka.bindings.ack.consumer:
+        resetOffsets: true
+      bindings:
+        msgs:
+          destination: msgs
+          group: es_reader
+        input:
+          destination: messages
+          #group: es_reader
+        ack:
+          destination: msgAck
+          group: es_ack_reader
+        output.destination: msgAck
+          # uncomment below to have this module consume from a specific partition
+          # in the range of 0 to N-1, where N is the upstream module's partitionCount
+          #consumerProperties:
+          #  partitionIndex: 1
